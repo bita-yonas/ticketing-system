@@ -49,8 +49,34 @@ app.config.update(
 )
 
 # Initialize Firebase Admin SDK
-cred = credentials.Certificate('ticket-f1196-firebase-adminsdk-fbsvc-cba95756cb.json')
-firebase_admin.initialize_app(cred)
+try:
+    import json
+    from firebase_admin import credentials
+
+    # Check if running on Vercel (use environment variables)
+    if os.environ.get('VERCEL_ENV') == 'production':
+        # Create credentials from environment variables
+        cred_dict = {
+            "type": "service_account",
+            "project_id": os.environ.get('FIREBASE_PROJECT_ID'),
+            "private_key_id": os.environ.get('FIREBASE_PRIVATE_KEY_ID'),
+            "private_key": os.environ.get('FIREBASE_PRIVATE_KEY', '').replace('\\n', '\n'),
+            "client_email": os.environ.get('FIREBASE_CLIENT_EMAIL'),
+            "client_id": os.environ.get('FIREBASE_CLIENT_ID'),
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+            "client_x509_cert_url": os.environ.get('FIREBASE_CLIENT_CERT_URL')
+        }
+        cred = credentials.Certificate(cred_dict)
+    else:
+        # Local development - use JSON file
+        cred = credentials.Certificate('ticket-f1196-firebase-adminsdk-fbsvc-cba95756cb.json')
+    
+    firebase_admin.initialize_app(cred)
+except Exception as e:
+    print(f"Firebase initialization error: {e}")
+    # Continue without Firebase - we'll handle this in the auth routes
 
 # --- Database helpers ---
 def get_db():

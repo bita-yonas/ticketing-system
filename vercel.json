@@ -30,7 +30,13 @@
   ],
   "env": {
     "PYTHONPATH": ".",
+    "FLASK_APP": "vercel_app.py",
     "FLASK_ENV": "production",
-    "FLASK_SECRET_KEY": "@flask_secret_key"
+    "FLASK_DEBUG": "0",
+    "FLASK_SECRET_KEY": "@flask_secret_key",
+    "CLERK_PUBLISHABLE_KEY": "@clerk_publishable_key",
+    "CLERK_SECRET_KEY": "@clerk_secret_key",
+    "RESEND_API_KEY": "@resend_api_key",
+    "GMAIL_APP_PASSWORD": "@gmail_app_password"
   }
 }

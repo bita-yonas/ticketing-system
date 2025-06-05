@@ -8,9 +8,21 @@
         "maxLambdaSize": "15mb",
         "runtime": "python3.9"
       }
+    },
+    {
+      "src": "static/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "templates/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
     {
       "src": "/(.*)",
       "dest": "vercel_app.py"
@@ -19,12 +31,6 @@
   "env": {
     "PYTHONPATH": ".",
     "FLASK_ENV": "production",
-    "VERCEL_ENV": "production",
-    "FIREBASE_PROJECT_ID": "@firebase_project_id",
-    "FIREBASE_PRIVATE_KEY_ID": "@firebase_private_key_id",
-    "FIREBASE_PRIVATE_KEY": "@firebase_private_key",
-    "FIREBASE_CLIENT_EMAIL": "@firebase_client_email",
-    "FIREBASE_CLIENT_ID": "@firebase_client_id",
-    "FIREBASE_CLIENT_CERT_URL": "@firebase_client_cert_url"
+    "FLASK_SECRET_KEY": "@flask_secret_key"
   }
 }

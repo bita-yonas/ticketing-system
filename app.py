@@ -25,9 +25,12 @@ load_dotenv()
 # Initialize Resend
 resend.api_key = os.getenv('RESEND_API_KEY')
 
+# Only import Firebase if not running on Vercel
+RUNNING_ON_VERCEL = os.environ.get('VERCEL_ENV') == 'production'
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'replace-with-a-secure-random-key'
-app.config['DATABASE']   = 'tickets.db'
+app.config['DATABASE']   = ':memory:' if RUNNING_ON_VERCEL else 'tickets.db'
 app.config['CLERK_PUBLISHABLE_KEY'] = os.getenv('CLERK_PUBLISHABLE_KEY')
 app.config['CLERK_SECRET_KEY'] = os.getenv('CLERK_SECRET_KEY')
 
@@ -49,34 +52,9 @@ app.config.update(
 )
 
 # Initialize Firebase Admin SDK
-try:
-    import json
-    from firebase_admin import credentials
-
-    # Check if running on Vercel (use environment variables)
-    if os.environ.get('VERCEL_ENV') == 'production':
-        # Create credentials from environment variables
-        cred_dict = {
-            "type": "service_account",
-            "project_id": os.environ.get('FIREBASE_PROJECT_ID'),
-            "private_key_id": os.environ.get('FIREBASE_PRIVATE_KEY_ID'),
-            "private_key": os.environ.get('FIREBASE_PRIVATE_KEY', '').replace('\\n', '\n'),
-            "client_email": os.environ.get('FIREBASE_CLIENT_EMAIL'),
-            "client_id": os.environ.get('FIREBASE_CLIENT_ID'),
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-            "client_x509_cert_url": os.environ.get('FIREBASE_CLIENT_CERT_URL')
-        }
-        cred = credentials.Certificate(cred_dict)
-    else:
-        # Local development - use JSON file
-        cred = credentials.Certificate('ticket-f1196-firebase-adminsdk-fbsvc-cba95756cb.json')
-    
+if not RUNNING_ON_VERCEL:
+    cred = credentials.Certificate('ticket-f1196-firebase-adminsdk-fbsvc-cba95756cb.json')
     firebase_admin.initialize_app(cred)
-except Exception as e:
-    print(f"Firebase initialization error: {e}")
-    # Continue without Firebase - we'll handle this in the auth routes
 
 # --- Database helpers ---
 def get_db():
@@ -1589,6 +1567,9 @@ def delete_service(service_id):
 
 @app.route('/firebase-callback')
 def firebase_callback():
+    if RUNNING_ON_VERCEL:
+        return redirect(url_for('login', error='Firebase auth not available'))
+        
     try:
         # Get the ID token from the query string
         id_token = request.args.get('token')
